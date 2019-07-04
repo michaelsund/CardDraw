@@ -1,7 +1,5 @@
 import * as React from 'react';
 import './Drawer.scss';
-import { Http2ServerResponse } from 'http2';
-import { delay } from 'q';
 
 interface IState {
   selectedCards: [];
