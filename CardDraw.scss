@@ -1,0 +1,69 @@
+.drawer-card-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+img {
+  width: 110px;
+  height: 150px;
+  box-shadow: 3px 3px 7px rgba(0,0,0,0.3);
+  opacity: 0;
+  animation-name: fadeIn;
+  animation-duration: 1.5s;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  transition: transform .2s; // Zoom
+  background: transparent;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+
+$rotate-start: 20;
+$rotate-step: 7.5;
+$top-start: 80;
+$top-step: 30;
+
+.drawer-card-wrapper img:not(:first-child) {
+  margin-left: -20px;
+}
+
+$children: 7;
+
+@for $i from 1 through $children {
+  .drawer-card-wrapper img:nth-child(#{$i}) {
+    animation-delay: .5s;
+    position: relative;
+    @if ($i == $children / 2 + .5) {
+      top: -#{$top-step}px;
+    }
+    @else if ($i < $children / 2) {
+      // Left side of middle
+      transform: rotate(-#{($rotate-start - ($rotate-step * $i))}deg);
+      top: #{($top-start - ($top-step * $i))}px;
+    }
+    @else if ($i > $children / 2) {
+      // Right side of middle
+      // transform: rotate(#{($rotate-start - ($rotate-step * ($children - $i)))}deg);
+      transform: rotate(#{(($rotate-start - $rotate-step) - ($rotate-step * ($children - $i)))}deg);
+      top: #{(($top-start - $top-step) - ($top-step * ($children - $i)))}px;
+    }
+   
+  }
+}
+
+.drawer-card-wrapper > img:hover {
+  z-index: 1;
+  border: 1px solid crimson;
+  transform: scale(1.5);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  
+  to {
+    opacity: 1;
+  }
+}
