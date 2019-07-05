@@ -1,5 +1,6 @@
 import * as React from 'react';
-import './Drawer.scss';
+import CardDrawImage from './CardDrawImage';
+import './CardDraw.scss';
 
 interface IState {
   selectedCards: [];
@@ -10,6 +11,11 @@ interface IState {
 interface IProps {
   deck: Object[];
   londonMulligan: boolean;
+}
+
+interface ISelectedCard {
+  id: string;
+  toBottom: boolean;
 }
 
 class Drawer extends React.Component<IProps, {}> {
@@ -29,9 +35,9 @@ class Drawer extends React.Component<IProps, {}> {
     this.drawCards();
   }
 
-  public shuffle = (array: string[]) => {
+  public shuffle = (array: ISelectedCard[]) => {
     let currentIndex: number = array.length;
-    let temporaryValue: string = '';
+    let temporaryValue: ISelectedCard = null;
     let randomIndex: number = 0;
 
     // While there remain elements to shuffle...
@@ -48,13 +54,13 @@ class Drawer extends React.Component<IProps, {}> {
     return array;
   };
 
-  public drawCards = async () => {
-    let drawedCards: string[] = [];
-    const cardsToDraw = this.drawSize - this.state.numMulls;
-    const flattenedDeck: string[] = [];
+  public drawCards = async (mulligans: number = 0) => {
+    let drawedCards: ISelectedCard[] = [];
+    const cardsToDraw = this.drawSize - mulligans;
+    const flattenedDeck: ISelectedCard[] = [];
     await this.props.deck.map((card: any) => {
       for (let i = 0; i <= card.amount - 1; i += 1) {
-        flattenedDeck.push(card.id);
+        flattenedDeck.push({ id: card.id, toBottom: false });
       }
     });
 
@@ -72,15 +78,15 @@ class Drawer extends React.Component<IProps, {}> {
     this.getCardImages(this.state.selectedCards);
   };
 
-  public getCardImages = async (cardIds: string[]): Promise<void> => {
+  public getCardImages = async (cardIds: ISelectedCard[]): Promise<void> => {
     this.setState({ selectedCardsUris: [] });
 
-    await cardIds.reduce((ids, id) => {
-      return ids.then(() => {
+    await cardIds.reduce((cards, card) => {
+      return cards.then(() => {
         return new Promise((resolve: any) => {
           setTimeout(() => {
             resolve(
-              fetch(`https://api.scryfall.com/cards/${id}`)
+              fetch(`https://api.scryfall.com/cards/${card.id}`)
                 .then((response: Response) => response.json())
                 .then((response): any =>
                   this.setState({ selectedCardsUris: [...this.state.selectedCardsUris, response.image_uris.normal] }),
@@ -94,27 +100,58 @@ class Drawer extends React.Component<IProps, {}> {
 
   public takeMulligan = async () => {
     await this.setState({ numMulls: this.state.numMulls + 1 });
-    this.drawCards();
+    this.drawCards(this.state.numMulls);
+  };
+
+  public loader = () => (
+    <div className="loader">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  );
+
+  public handleLoading = (): boolean => {
+    if (this.props.londonMulligan) {
+      if (this.state.selectedCardsUris.length >= 7) {
+        return true;
+      }
+    } else {
+      if (this.state.selectedCardsUris.length === this.drawSize - this.state.numMulls) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  public drawNewHand = () => {
+    this.setState({ numMulls: 0 });
+    this.drawCards(0);
   };
 
   public render() {
     return (
       <div>
-        <p>Draw</p>
-        <button onClick={() => this.takeMulligan()}>Mull to {this.drawSize - this.state.numMulls - 1}</button>
         <div className="drawer-card-wrapper">
-          {this.props.londonMulligan ? (
-            this.state.selectedCardsUris.length >= 7 ? (
-              this.state.selectedCardsUris.map((uri: any) => <img src={uri} key={Math.random()} alt=""></img>)
-            ) : (
-              <p>Loading...</p>
-            )
-          ) : this.state.selectedCardsUris.length === this.drawSize - this.state.numMulls ? (
-            this.state.selectedCardsUris.map((uri: any) => <img src={uri} key={Math.random()} alt=""></img>)
-          ) : (
-            <p>Loading...</p>
-          )}
+          {this.props.londonMulligan
+            ? this.state.selectedCardsUris.length >= 7
+              ? this.state.selectedCardsUris.map((uri: string) => <CardDrawImage key={Math.random()} uri={uri} />)
+              : this.loader()
+            : this.state.selectedCardsUris.length === this.drawSize - this.state.numMulls
+            ? this.state.selectedCardsUris.map((uri: string) => <CardDrawImage key={Math.random()} uri={uri} />)
+            : this.loader()}
         </div>
+        <React.Fragment>
+          {this.handleLoading() && (
+            <div className="drawer-mull-wrapper">
+              <span>Remove {this.state.numMulls}</span>
+              <button onClick={() => this.takeMulligan()}>Mull to {this.drawSize - this.state.numMulls - 1}</button>
+              <button onClick={() => this.drawNewHand()}>New hand</button>
+            </div>
+          )}
+        </React.Fragment>
       </div>
     );
   }

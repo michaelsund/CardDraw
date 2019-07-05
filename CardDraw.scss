@@ -2,6 +2,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 40px;
+}
+
+.drawer-mull-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 img {
@@ -16,13 +23,11 @@ img {
   transition: transform .2s; // Zoom
   background: transparent;
   border-radius: 6px;
-  border: 1px solid transparent;
 }
 
-$rotate-start: 20;
-$rotate-step: 7.5;
+$rotate-step: 4;
 $top-start: 80;
-$top-step: 30;
+$top-step: 33;
 
 .drawer-card-wrapper img:not(:first-child) {
   margin-left: -20px;
@@ -32,20 +37,19 @@ $children: 7;
 
 @for $i from 1 through $children {
   .drawer-card-wrapper img:nth-child(#{$i}) {
-    animation-delay: .5s;
+    animation-delay: $i * .25s;
     position: relative;
     @if ($i == $children / 2 + .5) {
       top: -#{$top-step}px;
     }
     @else if ($i < $children / 2) {
       // Left side of middle
-      transform: rotate(-#{($rotate-start - ($rotate-step * $i))}deg);
+      transform: rotate(-#{($rotate-step * ($children - $i))}deg);
       top: #{($top-start - ($top-step * $i))}px;
     }
     @else if ($i > $children / 2) {
       // Right side of middle
-      // transform: rotate(#{($rotate-start - ($rotate-step * ($children - $i)))}deg);
-      transform: rotate(#{(($rotate-start - $rotate-step) - ($rotate-step * ($children - $i)))}deg);
+      transform: rotate(#{(($rotate-step * $i) - $rotate-step)}deg);
       top: #{(($top-start - $top-step) - ($top-step * ($children - $i)))}px;
     }
    
@@ -54,8 +58,7 @@ $children: 7;
 
 .drawer-card-wrapper > img:hover {
   z-index: 1;
-  border: 1px solid crimson;
-  transform: scale(1.5);
+  transform: scale(2) translateY(40px);
 }
 
 @keyframes fadeIn {
@@ -66,4 +69,37 @@ $children: 7;
   to {
     opacity: 1;
   }
+}
+
+$green: #007340;
+$blue: #0e68ab;
+$red:  #d3202a;
+$white: #f9faf4;
+$black: #150b00;
+$colors-list: $green $blue $red $white $black;
+
+.loader {
+	display: block;
+	span {
+    box-shadow: 3px 3px 7px rgba(0,0,0,0.3);
+		display: inline-block;
+		margin-top: 10px;
+		height: 20px;
+		width: 20px;
+		border-radius: 50%;
+		&:not(:first-child) { margin-left: 10px; }
+	}
+	@each $current-color in $colors-list {
+		$i: index($colors-list, $current-color);
+		$t: $i * -0.25;
+		span:nth-child(#{$i}) {
+			background: $current-color;
+			animation: move 1s ease-in-out (#{$t}s) infinite alternate;
+		}
+	}
+}
+
+@keyframes move {
+	from { transform: translateY(-10px); }
+	to { transform: translateY(5px); }
 }
